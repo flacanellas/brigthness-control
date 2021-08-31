@@ -145,12 +145,12 @@ function setBrightness {
                     ;;
             esac
 
-            #echo -n "[Info] ${_ACTION} brightness in ${B_STEP}%..."
+            echo -n "[Info] ${_ACTION} brightness to ${B_STEP}%..."
             _b=$(( ($BRIGHTNESS_MAX * $B_STEP) / 100 ))
 
             # SET BRIGHTNESS
             echo $_b > $BRIGHTNESS_DEVICE
-            #echo "[OK]"
+            echo "[OK]"
         # CHECK RANGE OVERLOAD 
         elif [[ $1 -ge 1 && $1 -lt 101 ]] ; then
             echo $(( ($1  * ${BRIGHTNESS_MAX}) / 100 )) > ${BRIGHTNESS_DEVICE}
