@@ -4,8 +4,15 @@
 # Author: Francisca Cañellas 
 # Email: francisca.leonor.alejandra.c@gmail.com
 
+# AUTHOR INFO
 AUTHOR_NAME="Francisca Cañellas"
 AUTHOR_EMAIL="francisca.leonor.alejandra.c@gmail.com"
+
+# DEBUG INFO
+# SHOW INFO MESSAGES
+INFO=1
+# SHOW DEBUG MESSAGES
+VERBOSE=0
 
 # INSTALATION INFO
 THIS_FILE="$(basename $0)"
@@ -30,12 +37,12 @@ BRIGHTNESS_CTRL_DEFAULT_STEP=10
 function uninstall {
     # CHECK ROOT PRIVILEDGES
     if [[ "$UID" -ne 0 ]] ; then
-        echo "[Info] I need root priviledges to change brightness!"
+        echo "I need root priviledges to change brightness!"
     else
-        echo -n "[Info] Uninstalling..."
+        [[ $INFO -ge 1 ]] && echo -n "[Info] Uninstalling..."
         exec_path=$(which ${THIS_FILE/.sh/})
         rm $exec_path
-        echo "[OK]"
+        [[ $INFO -ge 1 ]] && echo "[OK]"
     fi
 }
 
@@ -44,16 +51,16 @@ function install {
     if [[ $(dirname $0) != ${INSTALLATION_PATH} ]] ; then
         # CHECK ROOT PRIVILEDGES
         if [[ "$UID" -ne 0 ]] ; then
-            echo "[Info] I need root priviledges to change brightness!"
+            echo "I need root priviledges to change brightness!"
         else
             install_path="${INSTALLATION_PATH}/${THIS_FILE/.sh/}"
-            echo -n "[Info] Installing..."
+            [[ $INFO -ge 1 ]] && echo -n "[Info] Installing..."
             cp ${THIS_FILE} $install_path
-            echo "[OK]"
-            echo "[Info] Installed at: '$install_path'"
+            [[ $INFO -ge 1 ]] && echo "[OK]"
+            [[ $INFO -ge 1 ]] && echo "[Info] Installed at: '$install_path'"
         fi
     else
-        echo -e "[Info] Already installed!\n"
+        [[ $INFO -ge 1 ]] && echo -e "[Info] Already installed!\n"
         show_help
     fi
 }
@@ -61,7 +68,7 @@ function install {
 function reinstall {
     # CHECK ROOT PRIVILEDGES
     if [[ "$UID" -ne 0 ]] ; then
-        echo "[Info] I need root priviledges to change brightness!"
+        echo "I need root priviledges to change brightness!"
     else
         install_path="${INSTALLATION_PATH}/${THIS_FILE/.sh/}"
         if [[ -e $install_path ]] ; then
@@ -78,18 +85,30 @@ function show_help {
     echo -e "\nWrote by ${AUTHOR_NAME}"
     echo "Email: ${AUTHOR_EMAIL}"
     echo -e "\nUsage: brightness-control [--[install|uninstall]|INTEGER(1~100)|[h|help]]"
+    echo ""
     echo "INTEGER in range 1~100: Set brightness percent."
+    echo ""
     echo "-[h|help]:              Show help menu."
     echo "--install:              Install at '${INSTALLATION_PATH}/' folder. (Only works once.)"
     echo "--reinstall:            Run Uninstall and Install process or just install (first time)."
     echo "--show:                 Show current brightness."
     echo "--uninstall:            Uninstall from '${INSTALLATION_PATH}/'. (Only works once.)"
+    echo ""
+    echo "Internal modificable variables:"
+    echo "- INFO=1:                       Show [Info] messages."
+    echo "- VERBOSE=0:                    Show [Debug] messages."
+    echo "- INSTALLATION_PATH:            Setup installation folder on system."
+    echo "- BRIGHTNESS_CTRL_DEFAULT_STEP: Setup default step for --up/down options."
+    echo ""
+    echo "Enviroment variables:"
+    echo "- BRIGHTNESS_CTRL_STEP: Setup step for --up/down options from /home/USER_NAME/.bashrc"
+    echo "                        (Override internal 'BRIGHTNESS_CTRL_DEFAULT_STEP' variable)."
 }
 
 function setBrightness {
     # CHECK ROOT PRIVILEDGES
     if [[ "$UID" -ne 0 ]] ; then
-        echo "[Info] I need root priviledges to change brightness!"
+        echo "I need root priviledges to change brightness!"
     else
         # SET BRIGHTNESS UP/DOWN WITHOUT INTEGER PARAMETER
         if [[ -n $1 && $1 =~ ^(\+|\-)$ ]] ; then
@@ -97,11 +116,11 @@ function setBrightness {
             if [[ -z $2 ]] ; then
                 # USE DEFAULT STEP VARIABLE
                 if [[ -z "${BRIGHTNESS_CTRL_STEP}" ]] ; then 
-                    echo "[Info] setting default brightness step to 10!"
+                    [[ $VERBOSE -eq 1 ]] && echo "[Debug] setting default brightness step to ${BRIGHTNESS_CTRL_DEFAULT_STEP}!"
                     B_STEP=$BRIGHTNESS_CTRL_DEFAULT_STEP
                 # USE ENVIROMENT VARIABLE
                 else
-                    echo "[Info] using enviroment variable 'BRIGHTNESS_CTRL_STEP'!"
+                    [[ $VERBOSE -eq 1 ]] && echo "[Debug] using enviroment variable 'BRIGHTNESS_CTRL_STEP'!"
                     B_STEP=$BRIGHTNESS_CTRL_STEP
                 fi
             # USE #2 PARAMETER
@@ -112,7 +131,7 @@ function setBrightness {
             # FIX STEP LOWER TO 1
             if [[ $B_STEP -lt 1 ]] ; then
                 B_STEP=1
-                echo "[Info] Step under minimun parameter, fixed to 1%!"
+                [[ $VERBOSE -eq 1 ]] && echo "[Debug] Step under minimun parameter, fixed to 1%!"
             fi
 
             # INCREMENTING/DECREMENTING
@@ -123,7 +142,7 @@ function setBrightness {
                     # FIX STEP GREATER THAN BRIGHTNESS REMAINING
                     if [[ $B_STEP -ge $BRIGHTNESS_REMAINING_PERCENT_VAL ]] ; then
                         B_STEP=$BRIGHTNESS_REMAINING_PERCENT_VAL
-                        echo "[Info] Step exeeds maximun brightness value to increase, fixed to ${B_STEP}%!"
+                        [[ $VERBOSE -eq 1 ]] && echo "[Debug] Step exeeds maximun brightness value to increase, fixed to ${B_STEP}%!"
                     fi
 
                     # CALCULATE BRIGHTNESS FINAL PERCENT 
@@ -136,7 +155,7 @@ function setBrightness {
                     # REDUCE ALL BRIGHTNESS TO 1%
                     if [[ $B_STEP -ge $BRIGHTNESS_CURR_PERCENT_VAL ]] ; then
                         B_STEP=1
-                        echo "[Info] Step exeeds current maximun brightness value to reduce, fixed to ${B_STEP}%!"
+                        [[ $VERBOSE -eq 1 ]] && echo "[Debug] Step exeeds current maximun brightness value to reduce, fixed to ${B_STEP}%!"
                     
                     # CALCULATE BRIGHTNESS TO FINAL PERCENT
                     else
@@ -145,17 +164,17 @@ function setBrightness {
                     ;;
             esac
 
-            echo -n "[Info] ${_ACTION} brightness to ${B_STEP}%..."
+            [[ $INFO -ge 1 ]] && echo -n "[Info] ${_ACTION} brightness to ${B_STEP}%..."
             _b=$(( ($BRIGHTNESS_MAX * $B_STEP) / 100 ))
 
             # SET BRIGHTNESS
             echo $_b > $BRIGHTNESS_DEVICE
-            echo "[OK]"
+            [[ $INFO -ge 1 ]] && echo "[OK]"
         # CHECK RANGE OVERLOAD 
         elif [[ $1 -ge 1 && $1 -lt 101 ]] ; then
             echo $(( ($1  * ${BRIGHTNESS_MAX}) / 100 )) > ${BRIGHTNESS_DEVICE}
         else
-            echo "[Error] brightness out of range 1~100!"
+            echo "[Error] Brightness out of range 1~100!"
         fi
     fi
 
